@@ -1,10 +1,24 @@
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import Body from "./components/Body";
+import Login from "./components/Login";
+import Browse from "./components/Browse";
+import Header from "./components/Header";
 
 
 function App() {
+  const router = createBrowserRouter([{
+      path:"/",
+      element:<Login/>
+  },
+  {
+      path:"/browse",
+      element:<Browse/>
+  }
+])
   return (
-    <h1 className="font-bold text-3xl text-green-400 p-4">
-      welcome to netflix gpt
-    </h1>
+    <RouterProvider router={router}>
+      <Body/>
+    </RouterProvider>
   );
 }
 

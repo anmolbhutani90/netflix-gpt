@@ -2,6 +2,12 @@
 
 - create react app setup
 - Install tailwind css
+- Header
+- Routing of the App
+- Login form
+- Sign up Form
+- Form Validation
+- useRef Hook
 
 #Features
 
