@@ -1,7 +1,12 @@
 import { useRef, useState } from "react";
 import Header from "./Header";
 import validate from "../utils/validate";
-import { BANNER_IMG_URL } from "../utils/constants";
+import { BANNER_IMG_URL, PROFILE_IMG_URL } from "../utils/constants";
+import { auth } from "../utils/firebase";
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { useDispatch } from "react-redux";
+import { addUser } from "../redux/userSlice";
+
 
 const Login = () =>{
     const [isSignIn, setIsSignIn] = useState(false);
@@ -9,14 +14,86 @@ const Login = () =>{
     const emailRef= useRef(null);
     const passRef= useRef(null);
     const nameRef= useRef(null);
+    const dispatch = useDispatch();
     const toggleSignIn = () =>{
         setIsSignIn(!isSignIn)
     }
+  
+ 
     const handleLogin = (e) =>{
         e.preventDefault();
         const validateMessage = validate(emailRef.current.value, passRef.current.value);
-        console.log(validateMessage, 'validateMessage')
-        setMessage(validateMessage)
+        setMessage(validateMessage);
+        if(validateMessage) return
+        if(!isSignIn){
+            //sign up logic
+            
+            createUserWithEmailAndPassword(
+                auth,
+                emailRef.current.value,
+                passRef.current.value
+              )
+                .then((userCredential) => {
+                  const user = userCredential.user;
+              
+                  // Update the user's profile
+                   updateProfile(user, {
+                    displayName: nameRef.current.value,
+                    photoURL: PROFILE_IMG_URL,
+                  })
+                    .then(() => {
+                      // Use the updated `user` object
+                      const { uid, email, displayName, photoURL } = auth.currentUser;
+              
+                      // Dispatch user details to the store
+                      dispatch(
+                        addUser({
+                          uid: uid,
+                          email: email,
+                          displayName: displayName,
+                          photoURL: photoURL,
+                        })
+                      );
+                    })
+                    .catch((error) => {
+                      // Handle errors from updateProfile
+                      setMessage(error.message);
+                    });
+                })
+                .catch((error) => {
+                  // Handle errors from createUserWithEmailAndPassword
+                  const errorCode = error.code;
+                  const errorMessage = error.message;
+                  setMessage(`${errorCode} - ${errorMessage}`);
+                });
+        }else{
+            //sign in logic
+            signInWithEmailAndPassword(auth, emailRef.current.value, passRef.current.value)
+            .then((userCredential) => {
+                // Signed in 
+                const user = userCredential.user;
+                const { uid, email, displayName, photoURL } = auth.currentUser;
+              
+                // Dispatch user details to the store
+                dispatch(
+                  addUser({
+                    uid: uid,
+                    email: email,
+                    displayName: displayName,
+                    photoURL: photoURL,
+                  })
+                );
+
+              
+            })
+            .catch((error) => {
+                // const errorCode = error.code;
+                // const errorMessage = error.message;
+                setMessage(error.message)
+            });
+        }
+        
+        
     }
     return(
         <div className="relative w-full h-screen">
